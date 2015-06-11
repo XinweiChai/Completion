@@ -1,0 +1,213 @@
+\documentclass[a4paper, 12pt, final]{article}
+
+\usepackage[greek,francais]{babel}
+\usepackage[UTF8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{extarrows}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{algorithm2e}
+\usepackage[colorlinks,
+            linkcolor=black,
+            anchorcolor=black,
+            citecolor=black
+            ]{hyperref}
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\newtheorem{myDef}{Definition}
+\newtheorem{myTheo}{Theorem}
+\usepackage{hyperref}
+\input{macros/macros}
+\input{macros/macros-ph}
+\input{macros/tikzstyles.tex}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+\newcommand{\ac}[3]{$#1\rightarrow#2\Rsh#3$}
+\newcommand{\sect}[1]{\section*{#1}
+				 \addcontentsline{toc}{section}{#1}}
+
+\begin{document}
+%titlepage
+\thispagestyle{empty}
+\begin{center}
+\begin{minipage}{0.75\linewidth}
+    \centering
+%University logo
+    %\includegraphics[width=0.3\linewidth]{logo.pdf}
+    %\rule{0.4\linewidth}{0.15\linewidth}\par
+    %\vspace{3cm}
+    {\uppercase{\Large rapport de thèse de master\par}}
+    \vspace{3cm}
+%Thesis title
+    {\Large Title\par}
+    \vspace{3cm}
+%Author's name
+    {\Large Xinwei CHAI\par}
+    \vspace{3cm}
+%Degree
+    %{\Large A thesis submitted for the degree of Doctor of Philosophy\par}
+    %\vspace{3cm}
+%Date
+    {\Large juillet 2015}
+\end{minipage}
+\end{center}
+\clearpage
+\thispagestyle{empty}
+\tableofcontents
+\clearpage
+\setcounter{page}{1}
+
+\sect{Résumé}
+%\section*{Résumé}
+%\addcontentsline{toc}{section}{Résumé}
+Pendant l'analyse des réseaux de régulation, on rencontre souvent les problèmes de l'explosion des espaces d'états. Process Hitting est capable de résoudre ces problèmes en précisant les actions au lieu des espace d'états. Souvent il y a des informations inconnues sur les réseaux, il est important de trouver les façons de compléter les réseaux à partir des données temporisées d'expérience. Dans cet article, nous allons présenter deux façons de complétion et faire la comparaison.
+\clearpage
+\section*{Remerciement}
+\addcontentsline{toc}{section}{Remerciement}
+Je tiens à remercier mes deux encadreurs, M. Olivier ROUX et M. Morgan MAGNIN, pour leur soutien continu et leurs conseils tout au long de cette thèse. Je leur remercie pour tout ce qu'ils m'ont apporté, pour leur présence, leur patience, pour m'avoir fait confiance et m'avoir laissé la liberté nécessaire à l'accomplissement de mes recherches, tout en gardant un œil critique et avisé. Je les remercie également pour plusieurs relectures de ce rapport. Je remercie beaucoup M. Olivier H.ROUX, responsable de Master II ARIA à l'Ecole Centrale de Nantes. J'adresse tous mes reconnaissances à tous mes professeurs pendant mes études de Master, notamment de 3\ieme{} année cycle ingénieur informatique. Je tiens également à remercier tout personnel et professeur de l'Ecole Centrale de Nantes ayant contribué de près ou de loin au bon déroulement de cette séminaire bibliographique. Je remercie également les camarades dans le laboratoire qui m'ont aidé pendant ce semestre dur. Finalement, un grand merci chaleureux et de tout mon cœur à mes parents, sans qui je ne serais absolument pas où j'en suis aujourd'hui. Je les remercie pour leur encouragements et soutiens constants.
+\section{Introduction}
+Dans l'analyse de réseaux de régulation biologique, les valeurs sont souvent discrétisées, dans ce cas-là, le Process Hitting est très compétant pour analyser les états discrets par rapport aux méthodes. traditionnelles. 
+\section{Réseaux de régulation}
+Un réseau de régulation biologique(RRB) décrit les interactions entre les entités biologiques, souvent des macromolécule ou des gènes d'un système donné. Il est statiquement représenté par un graphe d'interaction dont les sommets abstraient les entités biologiques et les arcs abstraient leurs interactions. Pour décrire l'évolution du système, le niveau de concentration de chaque entité est représenté par une valeur associée au sommet correspondant. L'évolution temporelle de ces niveaux constitue la dynamique du système.
+\subsection*{Modèle de Thomas}
+\addcontentsline{toc}{subsection}{Modèle de Thomas}
+Selon Thomas, un RRB peut être représenté par un graphe orienté étiqueté, noté $G = (V, E)$ , chaque sommet $v \in V$ est une variable discrète avec son seuil $b_v\in \mathbb{N}$ inférieur à son degré sortant. Chaque arc est étiqueté par un couple $(t_{\rm{uv}}, \alpha_{\rm{uv}})$, où  $(t_{\rm{uv}}$ est un entier compris entre 1 et $b_u$, appelé le seuil qualitatif et où $\alpha_{uv} \in \{+ ,-\}$  est la signe de régulation. (Toute régulations sont considérées comme effectives, i.e. $\alpha_{uv}=+, u \geq t_{uv}$ veut dire $u$ active $v$ et $u < t_{uv}$ veut dire $u$ inhibe $v$, vice versa pour le cas $\alpha_{uv}=-$)
+\\Etant donné $G = (V, E)$ un graphe de régulation, un état qualitatif de $G$ est un vecteur $q=(q_v)_{v \in V}$ tel que pour tout $v \in V$, $q_v \in \{0, 1, ... , b_v\}$ . L'ensemble $Q$ des états de $G$ est alors défini comme $Q=\prod_{v \in V}\{0, 1, ..., b_v\}$.
+\section{Process Hitting}
+\begin{myDef}
+Process Hitting: Un Process Hitting $PH$ est constitué d'un triplet $(\Sigma, L, \mathbb{H})$ :\par
+--$\sigma=\{a,b,...\}$ est l'ensemble fini des sortes\par
+--$L=\prod_{a\in\Sigma}{L_a}$ est un enesmble d'états avec $L_a=\{a_0,...a_{l_a}\}$ l'ensemble fini des processus de la sorte $a\in\Sigma$ et $l_a$ est un entier positif satisfaisant:\par
+\centerline{$a\neq b\Rightarrow \forall(a_i,b_j)\in L_a\times L_b,a_i\neq b_j$}
+L'ensemble fini d'actions est défini comme suite:\par
+\centerline{--$\mathbb{H}=\{a_i\rightarrow b_j\Rsh b_k|(a,b)\in\Sigma^2,(a_i,b_j,b_k)\in L_a\times L_b\times L_b,b_j\neq b_k, a=b\Rightarrow a_i=b_j\}$}
+$a_i, b_j, b_k$ sont notés respectivement $hitter(h)$, $target(h)$ et $bounce(h)$ d'une action $h$.
+\end{myDef}
+\begin{myDef}
+Scénario: Etant donné un Process Hitting $PH=(\Sigma, L, \mathbb{H})$, un scénario $\delta=h_1::...::h_n$ est une séquence des actions dans $H$ qui peuvent être tirées l'une par l'autre. %$n\in\uppercase\expandafter{\romannumeral2}^\delta$
+\end{myDef}
+\subsection*{Outil Pint}
+\addcontentsline{toc}{subsection}{Outil Pint}
+{\large{P}}INT
+\begin{lstlisting}[language=Prolog]
+---------------------------------------------------------------------------
+process G 1 process PCN 1 process L 1
+G 0 -> PC 1 0 G 1 -> PC 0 1 PC 0 -> G 0 1
+PC 1 -> G 1 0 L 0 -> L 0 1  L 1 -> L 1 0
+L 1 -> PC 1 0 L 0 -> PC 0 1
+initial_state 
+L 1, G 0, PC 1
+---------------------------------------------------------------------------
+\end{lstlisting}
+La modification des fichiers .ph
+\section{Graphe de causalité locale}
+\begin{myDef}
+Graphe de causalité locale(GLC) :
+\subsection*{Cut set}
+\addcontentsline{toc}{subsection}{Cut set}
+\end{myDef}
+\section{Complétion}
+\subsection{Motivation}
+Nous avons inventé 2 méthodes de complétion d'un réseau Process Hitting, qui se servent au différents cas.
+\subsection{Définitions préliminaires}
+\begin{myDef}
+Observabilité: une sorte est considérée observable si ses données temporisées sont disponible pendant l'expérience, et toutes les sortes sont attribuées inobservable par défaut.
+\end{myDef}
+\begin{myDef}
+Séquence: Une séquence est composée de processus dans l'ordre d'occurence. Une séquence est dite accessible s'il y a un scénario dans lequel les processus sont de même ordre d'occurence que la séquence.
+\end{myDef}
+\begin{myDef}
+Séquence stricte: Une séquence est stricte si elle contient toutes les évaluations des sortes observables, et les sortes inobservables ne doivent pas être dans une séquence stricte.
+\end{myDef}
+\begin{myDef}
+Ensemble de relations de régulation $R=\{(a,b,\alpha_{ab})\ |\  (a,b)\in\Sigma^2\land \alpha_{ab}\in\{+,-\} \}$
+\end{myDef}
+Exemple:
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}%[font=\scriptsize]
+%\path[use as bounding box] (0,-1) rectangle (4,4);
+
+\TSort{(0,0)}{a}{2}{l}
+\TSort{(4,0)}{b}{2}{r}
+\THit{a_0}{out=0,in=210}{b_1}{.west}{b_0}
+\THit{a_1}{out=60,in=30}{b_0}{.east}{b_1}
+\THit{b_0}{out=210,in=210}{a_0}{.west}{a_1}
+\THit{b_1}{out=170,in=0}{a_1}{.east}{a_0}
+
+\path[bounce,bend right]
+\TBounce{b_1}{}{b_0}{.west}
+\TBounce{b_0}{}{b_1}{.east}
+;
+\path[bounce,bend left]
+\TBounce{a_1}{}{a_0}{.east}
+;
+\path[bounce,bend left]
+\TBounce{a_0}{}{a_1}{.west}
+;
+\TState{a_0,b_0}
+\end{tikzpicture}
+\caption{\label{fig:ph} 
+Il y a 4 actions: $\mathbb{H}=\{a_0\rightarrow b_1\Rsh b_0$, $a_1\rightarrow b_0\Rsh b_1$, $b_0\rightarrow a_0\Rsh a_1\}$, $b_1\rightarrow a_1\Rsh a_0$, avec l'état initial $\varsigma=\langle a_0, b_0\rangle$, supposons les sortes $a$ et $b$ sont observables, la sequence $S_1=a_1::b_1$ est stricte alor que la sequence $S_2=b_1$ n'est pas stricte, comme le seul scénario est $\delta=b_0\rightarrow a_0\Rsh a_1::a_1\rightarrow b_0\Rsh b_1...$
+}
+\end{figure}
+
+\subsection{Complétion basé d'une séquence stricte}
+\subsubsection{Définition du problème}
+Étant donné un Process Hitting $PH$, un ensemble de relations de régulation $R$ et une séquence stricte $S$
+\subsubsection{Classificaion des processus}
+C'est aussi une analyse d'accessibilité.\\
+\begin{algorithm}[H]
+ \KwData{Un Process Hitting et une séquence strict}
+ \KwResult{Accessibilité de séquence et la classification de processus inaccessibles}
+ initialization\;
+ ...
+ %\While{not at end of this document}{
+  %read current\;
+  %\eIf{understand}{
+   %go to next section\;
+   %current section becomes this one\;
+   %}{
+   %go back to the beginning of current section\;
+  %}
+ %}
+ \caption{Algorithme de classification}
+\end{algorithm}
+\subsubsection{Ajout d'actions}
+\begin{algorithm}[H]
+ \KwData{Un Process Hitting ,un ensemble de relations de régulation, et un process inaccessible}
+ \KwResult{Au plus une action ajouté}
+ initialization\;
+ ...
+ \caption{Algorithme d'ajout d'action}
+\end{algorithm}
+\subsubsection{Structure de programme}
+\begin{algorithm}[H]
+ \KwData{Un fichier .ph}
+ \KwResult{Un Process Hitting complété}
+ initialization\;
+ ...
+ \caption{Structure de programme}
+\end{algorithm}
+\subsection {Complétion basé d'un système retardé}
+\subsubsection{Answer Set Programming}
+A quoi se sert Answer Set Programming(ASP), explication de grammaire
+\begin{lstlisting}[language=Prolog]
+-------------------------------------------------
+Code ASP
+-------------------------------------------------
+\end{lstlisting}
+\subsubsection{Système biologique retardé}
+\subsubsection{Technique de complétion}
+\subsection{Comparaison des résultats}
+J'attends le résultat \& la documentation d'Emna.
+\section{Discussion}
+
+\renewcommand\refname{Reference}
+\bibliographystyle{plain}
+\bibliography{Thesis}
+\end{document}
